@@ -1,0 +1,76 @@
+From 8db14eeead45e0f1961532f55061d5e4dd0f78be Mon Sep 17 00:00:00 2001
+From: Paul Wise <pabs3@bonedaddy.net>
+Date: Thu, 26 Aug 2021 22:03:00 +0800
+Subject: [PATCH] Add a mode to build against system versions of dependencies
+
+Make the default be to use system versions when available,
+but allow always using them or never using them.
+
+Add searching for and using system versions of fmt/googletest/pybind11,
+which are currently pulled directly from git using FetchContent.
+
+This will allow distributions that do not allow network access at build
+time to depend on and build against these packages.
+
+Fixes: https://github.com/nu-book/zxing-cpp/issues/248
+---
+ CMakeLists.txt                 |  7 +++++++
+ test/blackbox/CMakeLists.txt   | 18 +++++++++++++-----
+ 1 files changed, 54 insertions(+), 21 deletions(-)
+
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index 1361792..2b522e0 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -8,6 +8,7 @@ option (BUILD_EXAMPLES "Build the example barcode reader/writer applicatons" ON)
+ option (BUILD_BLACKBOX_TESTS "Build the black box reader/writer tests" ON)
+ option (BUILD_UNIT_TESTS "Build the unit tests (don't enable for production builds)" OFF)
+ option (BUILD_PYTHON_MODULE "Build the python module" OFF)
++set(BUILD_SYSTEM_DEPS "AUTO" CACHE STRING "Use system dependencies (AUTO/ALWAYS/NEVER)")
+ 
+ if (WIN32)
+     option (BUILD_SHARED_LIBS "Build and link as shared library" OFF)
+@@ -53,6 +54,12 @@ if (BUILD_UNIT_TESTS)
+     endif()
+ endif()
+ 
++set(BUILD_SYSTEM_DEPS_LIST AUTO ALWAYS NEVER)
++set_property(CACHE BUILD_SYSTEM_DEPS PROPERTY STRINGS ${BUILD_SYSTEM_DEPS_LIST})
++if(NOT BUILD_SYSTEM_DEPS IN_LIST BUILD_SYSTEM_DEPS_LIST)
++    message(FATAL_ERROR "BUILD_SYSTEM_DEPS must be one of ${BUILD_SYSTEM_DEPS_LIST}")
++endif()
++
+ add_subdirectory (core)
+ 
+ enable_testing()
+diff --git a/test/blackbox/CMakeLists.txt b/test/blackbox/CMakeLists.txt
+index 3da26dd..9d79e8e 100644
+--- a/test/blackbox/CMakeLists.txt
++++ b/test/blackbox/CMakeLists.txt
+@@ -1,10 +1,18 @@
+ cmake_minimum_required(VERSION 3.14)
+ 
+-include(FetchContent)
+-FetchContent_Declare (fmtlib
+-        GIT_REPOSITORY https://github.com/fmtlib/fmt.git
+-        GIT_TAG 7.1.2)
+-FetchContent_MakeAvailable (fmtlib) # Adds fmt::fmt
++if (BUILD_SYSTEM_DEPS STREQUAL "AUTO")
++    find_package (fmt)
++elseif (BUILD_SYSTEM_DEPS STREQUAL "ALWAYS")
++    find_package (fmt REQUIRED)
++endif()
++
++if (NOT fmt_FOUND)
++    include(FetchContent)
++    FetchContent_Declare (fmtlib
++            GIT_REPOSITORY https://github.com/fmtlib/fmt.git
++            GIT_TAG 7.1.2)
++    FetchContent_MakeAvailable (fmtlib) # Adds fmt::fmt
++endif()
+ 
+ if (BUILD_READERS)
+     add_executable (ReaderTest
+-- 
+2.33.1
+
