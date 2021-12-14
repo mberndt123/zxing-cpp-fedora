@@ -1,0 +1,18 @@
+diff -Naur zxing-cpp-1.2.0-original/wrappers/python/CMakeLists.txt zxing-cpp-1.2.0/wrappers/python/CMakeLists.txt
+--- zxing-cpp-1.2.0-original/wrappers/python/CMakeLists.txt	2021-05-28 06:47:09.000000000 -0400
++++ zxing-cpp-1.2.0/wrappers/python/CMakeLists.txt	2021-12-13 20:31:22.286170793 -0500
+@@ -1,13 +1,7 @@
+ cmake_minimum_required(VERSION 3.14)
+ project(ZXingPython)
+ 
+-# get pybind11
+-include(FetchContent)
+-#set(FETCHCONTENT_QUIET Off)
+-FetchContent_Declare (pybind11
+-    GIT_REPOSITORY https://github.com/pybind/pybind11.git
+-    GIT_TAG v2.6.2)
+-FetchContent_MakeAvailable (pybind11)
++find_package(pybind11)
+ 
+ # check if we are called from the top-level ZXing project
+ get_directory_property(hasParent PARENT_DIRECTORY)

@@ -35,6 +35,9 @@ Patch0: 0001-Add-a-mode-to-build-against-system-versions-of-depen.patch
 # Fixes CVE-2021-28021, CVE-2021-42715, and CVE-2021-42716, and adds a patch
 # file for zxing-cpp-specific changes
 Patch1: %{url}/pull/269.patch
+# Use the system copy of pybind11 rather than trying to download a copy. This
+# patch is unconditional, so it is not, as-is, suitable for sending upstream.
+Patch2: zxing-cpp-1.2.0-system-pybind11.patch
 
 %description
 ZXing-C++ ("zebra crossing") is an open-source, multi-format 1D/2D barcode
@@ -56,6 +59,18 @@ Requires: %{name}%{?_isa} = %{version}-%{release}
 The %{name}-devel package contains libraries and header files for
 developing applications that use %{name}.
 
+%package -n python3-%{name}
+Summary:        Python bindings for the %{name} barcode library
+
+BuildRequires: python3-devel
+BuildRequires: pybind11-devel
+BuildRequires: chrpath
+
+Requires: %{name}%{?_isa} = %{version}-%{release}
+
+%description -n python3-%{name}
+%{summary}.
+
 %prep
 %autosetup -p1
 # remove bundled stb libraries:
@@ -67,12 +82,50 @@ pushd thirdparty/stb
 patch -p1 < stb_image.patch
 popd
 
+# don’t use unversioned “python” interpreter in tests
+sed -r -i 's@(COMMAND )python@\1%{python3}@' wrappers/python/CMakeLists.txt
+# we don’t need cmake as a python dependency
+sed -r -i '/cmake/d' wrappers/python/pyproject.toml
+# build verbosely:
+
+%generate_buildrequires
+pushd wrappers/python &>/dev/null
+%pyproject_buildrequires -r
+popd &>/dev/null
+
 %build
-%cmake -DBUILD_EXAMPLES=OFF
+# Setting BUILD_PYTHON_MODULE builds a Python extension shared library module,
+# but we don’t get any metadata (dist-info), so it’s not terribly useful for
+# packaging purposes. Instead, it seems we must re-build the whole library
+# through setuptools to get that.
+%cmake -DBUILD_EXAMPLES=OFF -DBUILD_PYTHON_MODULE=ON
 %cmake_build
+pushd wrappers/python
+# CMake respects this environment variable. We need to see the compiler
+# invocations to verify the distro build flags are respected. Unfortunately,
+# pybind11 does add -O3, and there doesn’t seem to be a way to turn that off.
+# It’s a global pybind11 decision, not something in this package’s sources.
+export VERBOSE=1
+%pyproject_wheel
+popd
 
 %install
 %cmake_install
+pushd wrappers/python
+%pyproject_install
+# Now we do something sneaky: we substitute the Python extension that was built
+# in the original CMake invocation, replacing the one built with setuptools. It
+# is dynamically linked against the main libZXing.so, which makes it smaller,
+# and it was not built with that pesky -O3 that was added by pybind11, so it
+# better complies with packaging guidelines. The only problem is it contains an
+# rpath that we need to remove.
+popd
+install -t '%{buildroot}%{python3_sitearch}' -p \
+    %{_vpath_builddir}/wrappers/python/zxingcpp.*.so
+chrpath --delete %{buildroot}%{python3_sitearch}/zxingcpp.*.so
+pushd wrappers/python
+%pyproject_save_files zxingcpp
+popd
 
 %check
 %ctest
@@ -88,6 +141,8 @@ popd
 %{_libdir}/libZXing.so
 %{_libdir}/cmake/ZXing/
 %{_libdir}/pkgconfig/zxing.pc
+
+%files -n python3-%{name} -f %{pyproject_files}
 
 %changelog
 * Fri Dec 10 2021 Caolán McNamara <caolanm@redhat.com> 1.2.0-1
