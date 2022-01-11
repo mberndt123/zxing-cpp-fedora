@@ -77,7 +77,7 @@ Requires: %{name}%{?_isa} = %{version}-%{release}
 rm -v thirdparty/stb/stb_image_write.h thirdparty/stb/stb_image.h
 # stb_image.h is trivially forked: reconstruct the changes with the latest
 # unbundled copy
-cp -p %{_includedir}/stb/stb_image.h thirdparty/stb/
+cp -p /usr/include/stb/stb_image.h thirdparty/stb/
 pushd thirdparty/stb
 patch -p1 < stb_image.patch
 popd
