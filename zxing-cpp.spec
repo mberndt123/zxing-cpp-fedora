@@ -1,6 +1,6 @@
 Name: zxing-cpp
 Version: 1.2.0
-Release: 2%{?dist}
+Release: 3%{?dist}
 Summary: C++ port of the ZXing ("Zebra Crossing") barcode scanning library
 
 # The entire source is ASL 2.0, except:
@@ -145,6 +145,9 @@ popd
 %files -n python3-%{name} -f %{pyproject_files}
 
 %changelog
+* Sat Jan 22 2022 Fedora Release Engineering <releng@fedoraproject.org> - 1.2.0-3
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_36_Mass_Rebuild
+
 * Tue Dec 14 2021 Caolán McNamara <caolanm@redhat.com> 1.2.0-2
 - build python bindings
 
