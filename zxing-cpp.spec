@@ -1,6 +1,6 @@
 Name: zxing-cpp
 Version: 1.2.0
-Release: 3%{?dist}
+Release: 4%{?dist}
 Summary: C++ port of the ZXing ("Zebra Crossing") barcode scanning library
 
 # The entire source is ASL 2.0, except:
@@ -24,7 +24,9 @@ BuildRequires: gcc-c++
 BuildRequires: cmake
 BuildRequires: cmake(fmt)
 # -static BR’s required by guidelines for tracking of header-only libraries:
-BuildRequires: stb_image-devel
+# stb_image 2.27^20210910gitaf1a5bc-0.2 is the minimum EVR to contain fixes for
+# all of CVE-2021-28021, CVE-2021-42715, CVE-2021-42716, and CVE-2022-28041.
+BuildRequires: stb_image-devel >= 2.27^20210910gitaf1a5bc-0.2
 BuildRequires: stb_image-static
 BuildRequires: stb_image_write-devel
 BuildRequires: stb_image_write-static
@@ -145,6 +147,9 @@ popd
 %files -n python3-%{name} -f %{pyproject_files}
 
 %changelog
+* Sat Apr 23 2022 Benjamin A. Beasley <code@musicinmybrain.net> - 1.2.0-4
+- Security fix for CVE-2022-28041
+
 * Sat Jan 22 2022 Fedora Release Engineering <releng@fedoraproject.org> - 1.2.0-3
 - Rebuilt for https://fedoraproject.org/wiki/Fedora_36_Mass_Rebuild
 
