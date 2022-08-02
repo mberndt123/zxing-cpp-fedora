@@ -1,6 +1,6 @@
 Name: zxing-cpp
 Version: 1.2.0
-Release: 6%{?dist}
+Release: 7%{?dist}
 Summary: C++ port of the ZXing ("Zebra Crossing") barcode scanning library
 
 # The entire source is ASL 2.0, except:
@@ -40,6 +40,8 @@ Patch1: %{url}/pull/269.patch
 # Use the system copy of pybind11 rather than trying to download a copy. This
 # patch is unconditional, so it is not, as-is, suitable for sending upstream.
 Patch2: zxing-cpp-1.2.0-system-pybind11.patch
+# fix for recent libfmt
+Patch3: 0001-test-update-to-libfmt-v9.0.0.patch
 
 %description
 ZXing-C++ ("zebra crossing") is an open-source, multi-format 1D/2D barcode
@@ -147,6 +149,9 @@ popd
 %files -n python3-%{name} -f %{pyproject_files}
 
 %changelog
+* Tue Aug 02 2022 Caolán McNamara <caolanm@redhat.com> 1.2.0-7
+- Resolves: rhbz#2113772 FTBFS in Fedora rawhide/f37
+
 * Sat Jul 23 2022 Fedora Release Engineering <releng@fedoraproject.org> - 1.2.0-6
 - Rebuilt for https://fedoraproject.org/wiki/Fedora_37_Mass_Rebuild
 
