@@ -5,7 +5,7 @@ Summary: C++ port of the ZXing ("Zebra Crossing") barcode scanning library
 
 # The entire source is ASL 2.0, except:
 # - wrappers/wasm/base64ArrayBuffer.js is MIT (but is not used)
-License: ASL 2.0 and MIT
+License: Apache-2.0 AND MIT
 Url: https://github.com/nu-book/zxing-cpp
 Source0: %{url}/archive/v%{version}/%{name}-%{version}.tar.gz
 
@@ -112,6 +112,7 @@ popd
 %changelog
 * Fri Feb 24 2023 Caolán McNamara <caolanm@redhat.com> 2.0.0-1
 - latest release
+- migrated to SPDX license
 
 * Sat Jan 21 2023 Fedora Release Engineering <releng@fedoraproject.org> - 1.2.0-9
 - Rebuilt for https://fedoraproject.org/wiki/Fedora_38_Mass_Rebuild
