@@ -1,41 +1,38 @@
-Name: zxing-cpp
-Version: 2.0.0
-Release: %autorelease
-Summary: C++ port of the ZXing ("Zebra Crossing") barcode scanning library
+Name:           zxing-cpp
+Version:        2.2.1
+Release:        %autorelease
+Summary:        C++ port of the ZXing ("Zebra Crossing") barcode scanning library
 
 # The entire source is ASL 2.0, except:
 # - wrappers/wasm/base64ArrayBuffer.js is MIT (but is not used)
-License: Apache-2.0 AND MIT
-Url: https://github.com/nu-book/zxing-cpp
-Source0: %{url}/archive/v%{version}/%{name}-%{version}.tar.gz
+License:        Apache-2.0 AND MIT
+URL:            https://github.com/zxing-cpp/zxing-cpp
+Source0:        %{url}/archive/v%{version}/%{name}-%{version}.tar.gz
 
-BuildRequires: gcc-c++
-BuildRequires: cmake
-BuildRequires: cmake(fmt)
-# Use the system copy of pybind11 rather than trying to download a copy. This
-# patch is unconditional, so it is not, as-is, suitable for sending upstream.
-Patch0: zxing-cpp-1.2.0-system-pybind11.patch
+BuildRequires:  gcc-c++
+BuildRequires:  cmake
+BuildRequires:  cmake(fmt)
 
 %description
 ZXing-C++ ("zebra crossing") is an open-source, multi-format 1D/2D barcode
 image processing library implemented in C++.
 
-%package devel
-Summary: Development files for %{name}
-Requires: %{name}%{?_isa} = %{version}-%{release}
+%package        devel
+Summary:        Development files for %{name}
+Requires:       %{name}%{?_isa} = %{version}-%{release}
 
-%description devel
+%description    devel
 The %{name}-devel package contains libraries and header files for
 developing applications that use %{name}.
 
-%package -n python3-%{name}
+%package -n     python3-%{name}
 Summary:        Python bindings for the %{name} barcode library
 
-BuildRequires: python3-devel
-BuildRequires: pybind11-devel
-BuildRequires: chrpath
+BuildRequires:  python3-devel
+BuildRequires:  pybind11-devel
+BuildRequires:  chrpath
 
-Requires: %{name}%{?_isa} = %{version}-%{release}
+Requires:       %{name}%{?_isa} = %{version}-%{release}
 
 %description -n python3-%{name}
 %{summary}.
@@ -47,6 +44,8 @@ Requires: %{name}%{?_isa} = %{version}-%{release}
 sed -r -i 's@(COMMAND )python@\1%{python3}@' wrappers/python/CMakeLists.txt
 # we don’t need cmake as a python dependency
 sed -r -i '/cmake/d' wrappers/python/pyproject.toml
+
+sed -i 's/pybind11\[global\]/pybind11/' wrappers/python/pyproject.toml
 # build verbosely:
 
 %generate_buildrequires
@@ -62,7 +61,11 @@ popd &>/dev/null
 # CMAKE_BUILD_TYPE=RelWithDebInfo prevents the build from stripping the
 # python module after it is built.  The stripping happens in
 # pybind11_add_module.
-%cmake -DBUILD_EXAMPLES=OFF -DBUILD_PYTHON_MODULE=ON -DCMAKE_BUILD_TYPE=RelWithDebInfo
+%cmake \
+    -DZXING_DEPENDENCIES=LOCAL \
+    -DBUILD_EXAMPLES=OFF \
+    -DBUILD_PYTHON_MODULE=ON \
+    -DCMAKE_BUILD_TYPE=RelWithDebInfo
 %cmake_build
 pushd wrappers/python
 # CMake respects this environment variable. We need to see the compiler
