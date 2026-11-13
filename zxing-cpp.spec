@@ -1,5 +1,5 @@
 Name:           zxing-cpp
-Version:        2.2.1
+Version:        2.3.0
 Release:        %autorelease
 Summary:        C++ port of the ZXing ("Zebra Crossing") barcode scanning library
 
@@ -46,6 +46,15 @@ sed -r -i 's@(COMMAND )python@\1%{python3}@' wrappers/python/CMakeLists.txt
 sed -r -i '/cmake/d' wrappers/python/pyproject.toml
 
 sed -i 's/pybind11\[global\]/pybind11/' wrappers/python/pyproject.toml
+
+# The new zint-based writer backend would use a bundled copy of libzint (a git
+# submodule that is not part of the release tarball; core/src/libzint only
+# contains dangling symlinks). Stick with the built-in (old) writer backend, as
+# in previous releases, also for the standalone python build, and make sure
+# nothing bundled can sneak in.
+rm -r core/src/libzint
+sed -r -i 's/(set +\(ZXING_WRITERS +)"NEW"/\1"OLD"/' wrappers/python/CMakeLists.txt
+grep -q 'ZXING_WRITERS "OLD"' wrappers/python/CMakeLists.txt
 # build verbosely:
 
 %generate_buildrequires
@@ -63,8 +72,8 @@ popd &>/dev/null
 # pybind11_add_module.
 %cmake \
     -DZXING_DEPENDENCIES=LOCAL \
-    -DBUILD_EXAMPLES=OFF \
-    -DBUILD_PYTHON_MODULE=ON \
+    -DZXING_EXAMPLES=OFF \
+    -DZXING_PYTHON_MODULE=ON \
     -DCMAKE_BUILD_TYPE=RelWithDebInfo
 %cmake_build
 pushd wrappers/python
